@@ -14,7 +14,7 @@ class _RegistroPsicologo extends State<RegistroPsicologo> {
   final _IdController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
-  static const String baseUrl = 'http://192.168.100.4:3000/api';
+  static const String baseUrl = 'http://192.168.56.1:3000/api';
 
   @override
   void dispose() {

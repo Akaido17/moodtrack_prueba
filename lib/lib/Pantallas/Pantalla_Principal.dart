@@ -4,6 +4,7 @@ import 'PantallaEstadoAnimo.dart';
 import 'Pantalla_Objetivos.dart';
 import 'Pantalla_Recordatorios.dart';
 import 'Pantalla_Agregar_Psicologo.dart';
+import 'Pantalla_Reportes.dart';
 import '../Objetivo.dart' as objetivo_model;
 import '../Recordatorio.dart' as recordatorio_model;
 import '../servicios/db_helper.dart';
@@ -914,8 +915,13 @@ class _EstadoPantallaPrincipal extends State<PantallaPrincipal> {
             onRefresh: _cargarRecordatorios,
           );
         case 3:
-          return PantallaTabla();
+          return PantallaReportesEstadoAnimo(
+            usuarioId: widget.usuarioId,
+            esPsicologo: false,
+          );
         case 4:
+          return PantallaTabla();
+        case 5:
           return PantallaAgregarPsicologo();
         default:
           return PantallaEstadoAnimo(usuarioId: widget.usuarioId);
@@ -1019,6 +1025,10 @@ class _EstadoPantallaPrincipal extends State<PantallaPrincipal> {
                         label: 'Recordatorios',
                       ),
                       BottomNavigationBarItem(
+                        icon: Icon(Icons.assessment),
+                        label: 'Reportes',
+                      ),
+                      BottomNavigationBarItem(
                         icon: Icon(Icons.table_chart),
                         label: 'Psicologos',
                       ),
@@ -1089,7 +1099,7 @@ class Registro {
 }
 
 class RegistroService {
-  static const String baseUrl = 'http://192.168.100.4:3000/api';
+  static const String baseUrl = 'http://192.168.56.1:3000/api';
 
   static Future<List<Registro>> obtenerRegistros() async {
     try {

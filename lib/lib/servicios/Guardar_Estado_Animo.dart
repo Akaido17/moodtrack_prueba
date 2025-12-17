@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class Guardar_Estado {
-  static const String baseUrl = 'http://192.168.100.4:3000/api';
+  static const String baseUrl = 'http://192.168.56.1:3000/api';
 
   Future<Map<String, dynamic>> guardarEstadoAnimo({
     required int usuarioId,

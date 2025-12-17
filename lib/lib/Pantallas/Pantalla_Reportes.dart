@@ -297,9 +297,9 @@ class _PantallaReportesEstadoAnimoState
   }
 
   Future<void> _generarReporte() async {
-    // Obtener el tipo de usuario y el ID del psicólogo
+    // Obtener el tipo de usuario y el ID del usuario logueado
     final tipoUsuario = await UsuarioService.obtenerTipoUsuario() ?? 0;
-    final psicologoId = await UsuarioService.obtenerUsuarioId();
+    final usuarioIdLogueado = await UsuarioService.obtenerUsuarioId();
     
     // Inicializar valores por defecto
     _idUsuarioController.text = _pacienteSeleccionado?.toString() ?? widget.usuarioId?.toString() ?? '';
@@ -309,17 +309,23 @@ class _PantallaReportesEstadoAnimoState
     // Variables para el diálogo
     int? pacienteSeleccionadoId = _pacienteSeleccionado;
     List<Map<String, dynamic>> pacientesDialogo = [];
-    bool cargandoPacientes = tipoUsuario == 2 && psicologoId != null;
+    bool cargandoPacientes = tipoUsuario == 2 && usuarioIdLogueado != null;
+    
+    // Para pacientes (tipo 1), usar directamente el ID del usuario logueado
+    int? idUsuarioParaReporte;
+    if (tipoUsuario == 1) {
+      idUsuarioParaReporte = usuarioIdLogueado;
+    }
 
     final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           // Cargar pacientes si es psicólogo y aún no se han cargado
-          if (tipoUsuario == 2 && psicologoId != null && cargandoPacientes && pacientesDialogo.isEmpty) {
+          if (tipoUsuario == 2 && usuarioIdLogueado != null && cargandoPacientes && pacientesDialogo.isEmpty) {
             Future.microtask(() async {
               try {
-                final resultado = await _estadoService.obtenerPacientes(psicologoId);
+                final resultado = await _estadoService.obtenerPacientes(usuarioIdLogueado);
                 if (resultado['success']) {
                   setDialogState(() {
                     pacientesDialogo = List<Map<String, dynamic>>.from(resultado['data'] ?? []);
@@ -349,6 +355,7 @@ class _PantallaReportesEstadoAnimoState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Solo mostrar selección de paciente para psicólogos (tipo 2)
                 if (tipoUsuario == 2) ...[
                   SizedBox(height: 16),
                   if (cargandoPacientes)
@@ -399,24 +406,9 @@ class _PantallaReportesEstadoAnimoState
                       ),
                     ),
                   ],
-                ] else ...[
-                  Text(
-                    'ID de Usuario:',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: _idUsuarioController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      hintText: 'Ingrese el ID del usuario',
-                      prefixIcon: Icon(Icons.person),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
                 ],
+                // Para pacientes (tipo 1), no se muestra ningún campo de usuario
+                // Se usa automáticamente el ID del usuario logueado
                 SizedBox(height: 16),
                 Text(
                   'Fecha de Inicio:',
@@ -507,7 +499,7 @@ class _PantallaReportesEstadoAnimoState
             ),
             ElevatedButton(
               onPressed: () {
-                // Validar campos según si es psicólogo o no
+                // Validar campos según el tipo de usuario
                 int? idUsuario;
                 
                 if (tipoUsuario == 2) {
@@ -522,8 +514,20 @@ class _PantallaReportesEstadoAnimoState
                     return;
                   }
                   idUsuario = pacienteSeleccionadoId;
+                } else if (tipoUsuario == 1) {
+                  // Si es paciente, usar directamente el ID del usuario logueado
+                  if (idUsuarioParaReporte == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: No se pudo obtener el ID del usuario'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  idUsuario = idUsuarioParaReporte;
                 } else {
-                  // Si no es psicólogo, validar el campo de texto
+                  // Para otros tipos de usuario (si los hay), validar el campo de texto
                   if (_idUsuarioController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

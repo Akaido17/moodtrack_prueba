@@ -1,0 +1,20 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Versi�n icono para usar en la app -->
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo redondeado -->
+  <rect x="8" y="8" width="176" height="176" rx="40" fill="url(#iconGrad)"/>
+  
+  <!-- Cara -->
+  <g transform="translate(96, 96)">
+    <circle cx="0" cy="0" r="60" fill="#ffffff" opacity="0.95"/>
+    <circle cx="-20" cy="-15" r="8" fill="#333333"/>
+    <circle cx="20" cy="-15" r="8" fill="#333333"/>
+    <path d="M -30 20 Q 0 40 30 20" stroke="#333333" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class Autenticacion {  // El nombre de la clase puede quedar igual
-  static const String baseUrl = 'http://192.168.100.4:3000/api';
+  static const String baseUrl = 'http://192.168.56.1:3000/api';
 
   // Método para registrar un nuevo usuario
   Future<Map<String, dynamic>> register(String email, String password) async {
