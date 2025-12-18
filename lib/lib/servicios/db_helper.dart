@@ -10,7 +10,7 @@ class DBHelper {
   factory DBHelper() => _instance;
   DBHelper._internal();
 
-  static const String baseUrl = 'http://192.168.56.1:3000/api';
+  static const String baseUrl = 'https://moodtrackapi-production.up.railway.app/api';
 
   Future<List<Objetivo>> getAllObjetivos(int usuarioId) async {
     try {

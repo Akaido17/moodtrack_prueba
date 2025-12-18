@@ -41,7 +41,7 @@ class Registro {
 
 
 class RegistroService {
-  static const String baseUrl = 'http://192.168.56.1:3000/api';
+  static const String baseUrl = 'https://moodtrackapi-production.up.railway.app/api';
   static const String relacionesPath = '$baseUrl/Registrarpaciente';
 
   static Future<List<Registro>> obtenerRegistros() async {
