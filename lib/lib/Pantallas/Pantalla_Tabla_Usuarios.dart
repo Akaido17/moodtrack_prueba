@@ -55,6 +55,8 @@ class RegistroService {
         },
       ).timeout(Duration(seconds: 10));
 
+      print('📥 Respuesta del servidor: ${response.statusCode}');
+      print('📥 Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
@@ -71,10 +73,31 @@ class RegistroService {
         print('✅ ${registros.length} relaciones obtenidas exitosamente');
         return registros;
       } else {
-        throw Exception('Error del servidor: ${response.statusCode}');
+        // Intentar obtener mensaje de error del servidor
+        String mensajeError = 'Error del servidor: ${response.statusCode}';
+        try {
+          final errorData = json.decode(response.body);
+          mensajeError = errorData['error'] ?? 
+                        errorData['message'] ?? 
+                        errorData['detail'] ?? 
+                        mensajeError;
+          print('❌ Mensaje de error del servidor: $mensajeError');
+        } catch (e) {
+          print('⚠️ No se pudo parsear el mensaje de error del servidor');
+          print('📄 Body completo: ${response.body}');
+        }
+        throw Exception(mensajeError);
       }
     } catch (e) {
-      print('Error al obtener registros: $e');
+      print('❌ Error al obtener registros: $e');
+      // Si es un timeout o error de conexión, lanzar un mensaje más claro
+      if (e.toString().contains('TimeoutException') || e.toString().contains('SocketException')) {
+        throw Exception('Error de conexión. Verifica tu conexión a internet.');
+      }
+      // Si ya es una Exception con mensaje, relanzarla directamente sin anidar
+      if (e is Exception) {
+        rethrow;
+      }
       throw Exception('Error de conexión: $e');
     }
   }
@@ -216,8 +239,18 @@ class _PantallaTablaUsuariosState extends State<PantallaTablaUsuarios> {
         isLoading = false;
       });
     } catch (e) {
+      // Extraer solo el mensaje útil del error, evitando mensajes anidados
+      String mensajeError = e.toString();
+      // Si el mensaje contiene "Exception: ", extraer solo la parte después
+      if (mensajeError.contains('Exception: ')) {
+        final partes = mensajeError.split('Exception: ');
+        mensajeError = partes.last;
+      }
+      // Limpiar cualquier otro prefijo de Exception
+      mensajeError = mensajeError.replaceAll('Exception: ', '');
+      
       setState(() {
-        error = e.toString();
+        error = mensajeError;
         isLoading = false;
       });
     }

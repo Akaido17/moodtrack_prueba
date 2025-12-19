@@ -26,7 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
   // Validar formato de email
   String? _validarEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Por favor ingresa tu correo electrónico';
+      return 'Por favor ingresa un usuario';
     }
     return null;
   }
@@ -190,7 +190,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   keyboardType: TextInputType.emailAddress,
                   validator: _validarEmail,
                   decoration: InputDecoration(
-                    labelText: 'Correo electrónico',
+                    labelText: 'Usuario',
                     prefixIcon: Icon(Icons.email),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
