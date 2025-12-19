@@ -44,7 +44,7 @@ class RegistroService {
   static const String baseUrl = 'https://moodtrackapi-production.up.railway.app/api';
   static const String relacionesPath = '$baseUrl/Registrarpaciente';
 
-  static Future<List<Registro>> obtenerRegistros() async {
+  static Future<List<Registro>> obtenerRegistros({int? psicologoId}) async {
     try {
       print('🔄 Obteniendo relaciones psicólogo-paciente');
 
@@ -73,6 +73,12 @@ class RegistroService {
         print('✅ ${registros.length} relaciones obtenidas exitosamente');
         return registros;
       } else {
+        // Si el endpoint principal falla y tenemos un psicologoId, intentar endpoint alternativo
+        if (psicologoId != null && response.statusCode == 500) {
+          print('⚠️ Endpoint principal falló, intentando endpoint alternativo...');
+          return await _obtenerRegistrosAlternativo(psicologoId);
+        }
+        
         // Intentar obtener mensaje de error del servidor
         String mensajeError = 'Error del servidor: ${response.statusCode}';
         try {
@@ -90,6 +96,17 @@ class RegistroService {
       }
     } catch (e) {
       print('❌ Error al obtener registros: $e');
+      
+      // Si el endpoint principal falla y tenemos un psicologoId, intentar endpoint alternativo
+      if (psicologoId != null && e.toString().contains('500')) {
+        print('⚠️ Endpoint principal falló con excepción, intentando endpoint alternativo...');
+        try {
+          return await _obtenerRegistrosAlternativo(psicologoId);
+        } catch (e2) {
+          print('❌ Endpoint alternativo también falló: $e2');
+        }
+      }
+      
       // Si es un timeout o error de conexión, lanzar un mensaje más claro
       if (e.toString().contains('TimeoutException') || e.toString().contains('SocketException')) {
         throw Exception('Error de conexión. Verifica tu conexión a internet.');
@@ -99,6 +116,54 @@ class RegistroService {
         rethrow;
       }
       throw Exception('Error de conexión: $e');
+    }
+  }
+
+  // Método alternativo usando el endpoint de pacientes del psicólogo
+  static Future<List<Registro>> _obtenerRegistrosAlternativo(int psicologoId) async {
+    try {
+      print('🔄 Intentando obtener pacientes desde endpoint alternativo...');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/psicologo/$psicologoId/pacientes'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 10));
+
+      print('📥 Respuesta alternativa del servidor: ${response.statusCode}');
+      print('📥 Body alternativo: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        List<dynamic> pacientesList = [];
+        
+        if (decoded is Map<String, dynamic> && decoded['pacientes'] is List) {
+          pacientesList = decoded['pacientes'];
+        } else if (decoded is List) {
+          pacientesList = decoded;
+        }
+
+        // Convertir pacientes a formato Registro
+        final registros = pacientesList.map((paciente) {
+          return Registro(
+            psicologoId: psicologoId,
+            pacienteId: paciente['id'] ?? paciente['id_paciente'] ?? 0,
+            pacienteUsuario: paciente['usuario'] ?? 
+                            paciente['nombre'] ?? 
+                            paciente['nombre_usuario'] ?? 
+                            '',
+          );
+        }).toList();
+        
+        print('✅ ${registros.length} pacientes obtenidos desde endpoint alternativo');
+        return registros;
+      } else {
+        throw Exception('Error del servidor alternativo: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error en endpoint alternativo: $e');
+      rethrow;
     }
   }
 
@@ -229,7 +294,7 @@ class _PantallaTablaUsuariosState extends State<PantallaTablaUsuarios> {
         error = null;
       });
 
-      final datos = await RegistroService.obtenerRegistros();
+      final datos = await RegistroService.obtenerRegistros(psicologoId: _psicologoId);
       setState(() {
         if (_psicologoId != null) {
           registros = datos.where((registro) => registro.psicologoId == _psicologoId).toList();
