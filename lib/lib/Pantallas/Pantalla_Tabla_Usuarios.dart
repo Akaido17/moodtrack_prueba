@@ -98,12 +98,17 @@ class RegistroService {
       print('❌ Error al obtener registros: $e');
       
       // Si el endpoint principal falla y tenemos un psicologoId, intentar endpoint alternativo
-      if (psicologoId != null && e.toString().contains('500')) {
+      if (psicologoId != null && (e.toString().contains('500') || e.toString().contains('Error del servidor'))) {
         print('⚠️ Endpoint principal falló con excepción, intentando endpoint alternativo...');
         try {
           return await _obtenerRegistrosAlternativo(psicologoId);
         } catch (e2) {
           print('❌ Endpoint alternativo también falló: $e2');
+          // Si ambos fallan, lanzar el mensaje del alternativo que es más descriptivo
+          if (e2 is Exception) {
+            throw e2;
+          }
+          throw Exception('No se pudieron obtener las relaciones. El servidor está experimentando problemas.');
         }
       }
       
@@ -159,7 +164,19 @@ class RegistroService {
         print('✅ ${registros.length} pacientes obtenidos desde endpoint alternativo');
         return registros;
       } else {
-        throw Exception('Error del servidor alternativo: ${response.statusCode}');
+        // Intentar obtener el mensaje de error del servidor
+        String mensajeError = 'Error del servidor: ${response.statusCode}';
+        try {
+          final errorData = json.decode(response.body);
+          mensajeError = errorData['error'] ?? 
+                        errorData['message'] ?? 
+                        errorData['detail'] ?? 
+                        'No se pudieron obtener las relaciones. El servidor está experimentando problemas.';
+          print('❌ Mensaje de error alternativo: $mensajeError');
+        } catch (e) {
+          print('⚠️ No se pudo parsear el mensaje de error alternativo');
+        }
+        throw Exception(mensajeError);
       }
     } catch (e) {
       print('❌ Error en endpoint alternativo: $e');

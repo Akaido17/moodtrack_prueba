@@ -677,9 +677,13 @@ class _PantallaReportesEstadoAnimoState
         if (estadosCargados.isEmpty) {
           _mostrarError('No se encontraron registros para el usuario $idUsuario en el rango de fechas seleccionado');
         } else {
-          _mostrarExito('Se encontraron ${estadosCargados.length} registros en el rango seleccionado');
-          // Mostrar diálogo de opciones de exportación
-          _mostrarOpcionesExportacion();
+          // Generar PDF directamente sin mostrar diálogo de selección de formato
+          try {
+            await Generar_Pdf.generar_pdf_tabla(estadosCargados);
+            _mostrarExito('Reporte PDF generado exitosamente con ${estadosCargados.length} registros');
+          } catch (e) {
+            _mostrarError('Error al generar el reporte PDF: $e');
+          }
         }
       } else {
         final errorMsg = resultado['error'] ?? 'Error desconocido al cargar datos';

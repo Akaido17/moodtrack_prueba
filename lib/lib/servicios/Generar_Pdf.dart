@@ -39,7 +39,14 @@ class Generar_Pdf {
     }
   }
 
-  static Future<dynamic> generar_pdf_tabla(List<EstadoAnimo> estadosAnimo) async {
+  static String _generarNombreArchivo() {
+    final ahora = DateTime.now();
+    final fecha = '${ahora.year}${ahora.month.toString().padLeft(2, '0')}${ahora.day.toString().padLeft(2, '0')}';
+    final hora = '${ahora.hour.toString().padLeft(2, '0')}${ahora.minute.toString().padLeft(2, '0')}${ahora.second.toString().padLeft(2, '0')}';
+    return 'Reporte_Estado_${fecha}_$hora';
+  }
+
+  static Future<dynamic> generar_pdf_tabla(List<EstadoAnimo> estadosAnimo, {String? nombreArchivo}) async {
     final pdf = Document();
     final headers = ['Estado', 'Fecha', 'Comentario'];
     
@@ -85,7 +92,9 @@ class Generar_Pdf {
       );
     }
     
-    return await Guardar_Reporte.savePdf(name: 'Reporte_Estados_Animo', pdf: pdf);
+    // Si no se proporciona un nombre, usar el formato: Reporte_Estado_FechaGeneracion_HoraGeneracion
+    final nombreFinal = nombreArchivo ?? _generarNombreArchivo();
+    return await Guardar_Reporte.savePdf(name: nombreFinal, pdf: pdf);
   }
 
 }

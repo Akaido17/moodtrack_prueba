@@ -145,23 +145,60 @@ class PantallaRecordatorios extends StatelessWidget {
           if (tipoUsuario == 2 && psicologoId != null && cargandoPacientes && pacientes.isEmpty) {
             Future.microtask(() async {
               try {
+                // Obtener el nombre/email del psicólogo primero
+                final psicologoEmail = await UsuarioService.obtenerUsuarioEmail() ?? 'Yo';
+                
                 final estadoService = Guardar_Estado();
                 final resultado = await estadoService.obtenerPacientes(psicologoId);
                 if (resultado['success']) {
                   setDialogState(() {
-                    pacientes = List<Map<String, dynamic>>.from(resultado['data'] ?? []);
+                    // Agregar "Yo mismo" al principio de la lista
+                    pacientes = [
+                      {
+                        'id': psicologoId,
+                        'nombre': psicologoEmail,
+                      },
+                      ...List<Map<String, dynamic>>.from(resultado['data'] ?? []),
+                    ];
                     cargandoPacientes = false;
                   });
                 } else {
+                  // Si no hay pacientes, agregar solo "Yo mismo"
                   setDialogState(() {
+                    pacientes = [
+                      {
+                        'id': psicologoId,
+                        'nombre': psicologoEmail,
+                      },
+                    ];
                     cargandoPacientes = false;
                   });
                 }
               } catch (e) {
                 print('Error al cargar pacientes: $e');
-                setDialogState(() {
-                  cargandoPacientes = false;
-                });
+                // En caso de error, agregar solo "Yo mismo"
+                try {
+                  final psicologoEmail = await UsuarioService.obtenerUsuarioEmail() ?? 'Yo';
+                  setDialogState(() {
+                    pacientes = [
+                      {
+                        'id': psicologoId,
+                        'nombre': psicologoEmail,
+                      },
+                    ];
+                    cargandoPacientes = false;
+                  });
+                } catch (e2) {
+                  setDialogState(() {
+                    pacientes = [
+                      {
+                        'id': psicologoId,
+                        'nombre': 'Yo',
+                      },
+                    ];
+                    cargandoPacientes = false;
+                  });
+                }
               }
             });
           }
@@ -349,8 +386,7 @@ class PantallaRecordatorios extends StatelessWidget {
             ElevatedButton(
               onPressed: (titulo.isNotEmpty && 
                          (tipoRecordatorio == 'Una vez' || 
-                          (tipoRecordatorio == 'Repetir' && diasSemanaSeleccionados.isNotEmpty)) &&
-                         (tipoUsuario != 2 || pacienteSeleccionadoId != null))
+                          (tipoRecordatorio == 'Repetir' && diasSemanaSeleccionados.isNotEmpty)))
                   ? () {
                 // Si es "Una vez", combinar fecha y hora
                 DateTime? fechaCompleta;
