@@ -17,7 +17,7 @@ class AplicacionBienestar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mi Bienestar',
+      title: 'MoodTrack',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
